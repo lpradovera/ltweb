@@ -1,5 +1,102 @@
 %h2 Load Testing
-%iframe{id: "runner", name: "runner", frameborder: 0, width: 1, height: 1}
 .row
-  %form{action: "/run", method: "post"}
+  %form{action: "/run", method: "post", id: "runform"}
+    %p
+      %label{for: "concurrent"} Concurrent
+      %input{type: "text", name: "concurrent", id: "concurrent", value: 4}
+    %p
+      %label{for: "total"} Total
+      %input{type: "text", name: "total", id: "total", value: 20}
+    %p
+      %label{for: "rate"} Ramp up rate
+      %input{type: "text", name: "rate", id: "rate", value: 2}
     %button{type: "submit"} Go
+.row
+  -#%button{type: "button", id: "manual"} Go
+  %h3#running Please select a scenario
+  %p#message and press "Go"
+.row
+  #chart
+
+:javascript
+  $(function() {
+    var interval = null;
+    //drawChart();
+    $('#runform').ajaxForm(function() {
+      startDrawing();
+    });
+    $("#manual").click(function() {
+      startDrawing();
+    });
+    function startDrawing()
+    {
+      interval = setInterval(drawChart, 2000);
+    }
+
+    function drawChart()
+    {
+      $("#running").html("Updating...");
+      $.ajax({
+        url: '/series',
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+          series = data["series"];
+          ticks = data["time"];
+          setRunning(data["running"]);
+          if (data["running"] == false) {
+            clearInterval(interval);
+          }
+          if (ticks.length > 0) {
+            started = _.last(series[0])[1]
+            completed = _.last(series[1])[1]
+            failed = _.last(series[2])[1]
+            running = started - completed + failed;
+            $("#message").html(started + " started, " + running + " running, " + completed + " completed, " + failed + " failed");
+            $.jqplot('chart', series, plotOptions(ticks)).replot();
+          }
+        }
+      });
+    }
+    
+    function setRunning(status)
+    {
+      if (status == true) {
+        $("#running").html("Running");
+      } else {
+        $("#running").html("Stopped");
+      }
+    }
+
+    function plotOptions(xTicks)
+    {
+      options = {
+        seriesColors: ["#ffcc00", "#009900", "#ff0000"],
+        series: [
+          {
+            label: "Started"
+          },
+          {
+            label: "Successful"
+          },
+          {
+            label: "Failed"
+          }
+        ],
+        axesDefaults: {
+          min: -0.5
+        },
+        axes: {
+          xaxis: {
+            ticks: xTicks 
+          }
+        },
+        legend: {
+          show: true,
+          location: 'ne',
+          placement: 'outsideGrid'
+        }
+      }
+      return options;
+    }
+  });

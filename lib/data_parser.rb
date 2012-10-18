@@ -7,13 +7,20 @@ class DataParser
       total = []
       success = []
       failed = []
-      CSV.foreach(path, :headers => true, :col_sep => ";") do |row|
-        elapsed << row["ElapsedTime(C)"]
-        total << row["TotalCallCreated"].to_i
-        success << row["SuccessfulCall(C)"].to_i
-        failed << row["FailedCall(C)"].to_i
+      step = 0
+      if File.exists?(path)
+        CSV.foreach(path, :headers => true, :col_sep => ";") do |row|
+          total_step = row["TotalCallCreated"].to_i
+          success_step = row["SuccessfulCall(C)"].to_i
+          failed_step = row["FailedCall(C)"].to_i
+          elapsed << [step, row["ElapsedTime(C)"]]
+          total << [step, total_step]
+          success << [step, success_step]
+          failed << [step, failed_step]
+          step += 1
+        end
       end
-      [elapsed, total, success, failed]
+      {time: elapsed, series: [total, success, failed]}
     end
   end
 end

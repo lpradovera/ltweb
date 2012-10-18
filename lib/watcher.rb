@@ -1,18 +1,23 @@
 class Watcher
-  @current = [[], [], [], []]
+  @current = [[], [], []]
   @running = false
   def self.watch(path, num_of_calls, polling = 3)
-    p "START WATCHING **************************************"
-    @current = [[], [], [], []]
+    @current = DataParser.parse(path) if File.exists?(path)
     @running = true
     while @running do
-      sleep(5)
+      sleep(polling)
       p "RUNNING WATCHER"
-      series = DataParser.parse(path) if File.exists?(path)
-      @current = series
-      break if (series[1].last && (series[1].last + series[2].last) == num_of_calls)
+      data = DataParser.parse(path) if File.exists?(path)
+      p data
+      if (data[:series][1].last && (data[:series][2].last + data[:series][3].last) == num_of_calls)
+        data[:running] = false
+        @running = false
+        break
+      else
+        data[:running] = true
+      end
+      @current = data
     end
-    p "END WATCHING **************************************"
   end
 
   def self.series

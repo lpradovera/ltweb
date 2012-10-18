@@ -1,1 +1,1 @@
-web: bundle exec ruby app.rb
+web: shotgun app.rb

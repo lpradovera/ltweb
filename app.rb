@@ -28,20 +28,24 @@ post "/run" do
     update_rate: 10
   }
   run_params = defaults
+  p params
   path = File.join(AHN_PATH, "results", "simple_asterisk.csv")
   run_params[:base_dir] = File.join(AHN_PATH, "sipp")
   run_params[:log_path] = path
+  run_params[:concurrent] = params[:concurrent].to_i if params[:concurrent].to_i > 0
+  run_params[:total] = params[:total].to_i if params[:total].to_i > 0
+  run_params[:rate] = params[:rate].to_i if params[:rate].to_i > 0
 
   Thread.new do
     Runner.run(run_params)
   end
 
-  Thread.new do
-    Watcher.watch(path, run_params[:total])
-  end
   json({status: "ok"})
 end
 
 get "/series" do
-  json Watcher.series 
+  path = File.join(AHN_PATH, "results", "simple_asterisk.csv")
+  data = DataParser.parse(path)
+  data[:running] = Runner.running?
+  json data
 end
