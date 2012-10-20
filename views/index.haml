@@ -1,18 +1,28 @@
 %h2 Load Testing
 .row
-  %form{action: "/run", method: "post", id: "runform"}
-    %p
-      %label{for: "concurrent"} Concurrent
-      %input{type: "text", name: "concurrent", id: "concurrent", value: 4}
-    %p
-      %label{for: "total"} Total
-      %input{type: "text", name: "total", id: "total", value: 20}
-    %p
-      %label{for: "rate"} Ramp up rate
-      %input{type: "text", name: "rate", id: "rate", value: 2}
-    %button{type: "submit"} Go
+  %form.form-horizontal{action: "/run", method: "post", id: "runform"}
+    .control-group
+      %label.control-label{for: "concurrent"} Concurrent
+      .controls
+        %input{type: "text", name: "concurrent", id: "concurrent", value: 4}
+    .control-group
+      %label.control-label{for: "total"} Total
+      .controls
+        %input{type: "text", name: "total", id: "total", value: 20}
+    .control-group
+      %label.control-label{for: "rate"} Ramp up rate
+      .controls
+        %input{type: "text", name: "rate", id: "rate", value: 2}
+    .control-group
+      %label.control-label{for: "scenario"} Scenario
+      .controls
+        %select{name: "scenario", id: "rate"}
+          %option{value: 1} 30s output (30s)
+          %option{value: 3} 25s Output, DTMF, 10s Output (~35s)
+    .control-group
+      .controls
+        %button.btn{type: "submit"} Go
 .row
-  -#%button{type: "button", id: "manual"} Go
   %h3#running Please select a scenario
   %p#message and press "Go"
 .row
@@ -21,7 +31,6 @@
 :javascript
   $(function() {
     var interval = null;
-    //drawChart();
     $('#runform').ajaxForm(function() {
       startDrawing();
     });
@@ -88,7 +97,12 @@
         },
         axes: {
           xaxis: {
-            ticks: xTicks 
+            ticks: xTicks,
+            tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
+            tickOptions: {
+              angle: -30,
+              fontSize: '10pt'
+            }
           }
         },
         legend: {
